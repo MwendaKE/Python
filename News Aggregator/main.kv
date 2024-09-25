@@ -1,0 +1,206 @@
+ScreenManager:
+    id: screen_manager
+    
+    HomeScreen:
+        name: "home"
+        id: home_screen
+    
+    NewsArticleContentScreen:
+        name: "content_screen"
+        id: content_screen
+
+        
+<HomeScreen>:
+    MDBoxLayout:
+        orientation: 'vertical'
+        
+        MDTopAppBar:
+	        title: "News Aggregator"
+	        valign: "center"
+	         
+        MDBoxLayout:
+            orientation: 'vertical'
+            padding: dp(10)
+            adaptive_height: True
+            
+            MDGridLayout:
+                cols: 1
+                spacing: 10
+                adaptive_height: True
+	        
+	            SearchTextEdit:
+	                id: search_input
+	                text_color_normal: "#FFA500"
+	                hint_text: "Enter a topic to search eg. Murder"
+	                hint_text_color_normal: "#FFEB3B"
+	                hint_text_color_focus: "#FFEB3B"
+	                size_hint: 1, None
+	                height: "50dp"  
+	                font_size: "22dp"
+	                padding: "10dp"
+	                pos_hint: {"center_x": 0.5}
+	                line_color_normal: "#FFEB3B"
+	                line_color_focus: "#FFEB3B"
+	                
+	                
+	            MDGridLayout:
+	                cols: 2
+	                spacing: 10
+	                size_hint_y: None
+	                height: "40dp"
+	                
+	                DropdownTimeButton:
+	                    id: stime
+	                    text: root.enter_article_start_date()
+	                    size_hint: 0.5, None
+	                    height: "20dp"
+	                    icon: "calendar-today"
+	                    on_release: root.open_startime_date_picker()
+	                        
+	                DropdownTimeButton:
+	                    id: etime
+	                    text: root.enter_article_end_date()
+	                    size_hint: 0.5, None
+	                    height: "20dp"
+	                    icon: "calendar"
+	                    on_release: root.open_endtime_date_picker()
+	                        
+	            CustomTextLabel:
+	                id: search_count
+	                text: "Search Result: 0"
+	                height: "20dp"
+	                font_size: "14dp"
+	                color: "#FFEB3B"
+	                padding: [0, 20, 0, 20]
+	                
+	                  
+	    MDFloatLayout:
+            MDScrollView:
+	            bar_width: 0 # Hide scroll bar
+	            
+	            MDList:
+	                id: news_headlines_container
+	                padding: dp(10)
+	                spacing: "20dp"
+	                    
+	        MDFloatingActionButton:
+                icon: "magnify"
+                size: dp(56), dp(56)
+                pos_hint: {'x': .85, 'y': 0.05}
+                disabled: root.input_is_empty(search_input.text)
+                on_release: app.start_searching_for_articles(search_input.text, stime.text, etime.text)
+             
+             
+<NewsArticleContentScreen>:
+    MDBoxLayout:
+        orientation: 'vertical'
+        
+        MDTopAppBar:
+            title: "News Aggregator - News Content"
+            left_action_items: [["arrow-left", lambda x: app.go_home()]]
+
+        MDBoxLayout:
+            orientation: 'vertical'
+            padding: dp(10)
+            spacing: dp(10)
+            
+            CustomTextLabel:
+                id: article_title
+                color: "#EEDC82"
+                markup: True
+                font_size: "22dp"
+                bold: True
+                
+            CustomTextLabel:
+                id: author_source
+                markup: True
+                font_size: "18dp"
+               
+            CustomTextLabel:
+                id: published_at
+                markup: True
+                font_size: "18dp"
+               
+            MDScrollView:
+                bar_width: 0 # Hide scroll bar
+                
+                MDList:
+                    id: content_container
+                
+        
+<NewsArticleContentBlock>:
+    size_hint_y: None
+    height: self.texture_size[1]
+    text_size: self.width, None
+    halign: "justify"
+    markup: True
+    padding: [0, 0, 0, 20]  # [left, top, right, bottom]
+         
+                                                                                                   
+<NewsArticleItem>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: self.minimum_height  # Dynamically adjust height based on content. Using adaptive_height: True doesnt change this.
+    padding: dp(10)
+    spacing: dp(10)
+    style: "elevated"
+    line_color: "#FFEB3B"
+    line_width: 1.2
+    radius: [0, 10, 0, 10]  
+    
+    CustomTextLabel:
+        text: f"[ref={root.url}][b]{root.title}[/b][/ref]"  # Clickable reference
+        theme_text_color: "Primary"
+        font_size: "18sp"
+        color: "#FFEB3B"
+        on_ref_press: app.start_fetching_article_content(root.title, root.author_name, root.source_name, root.published_at, root.url)
+        markup: True
+        
+    CustomTextLabel:
+        text: root.description
+        theme_text_color: "Secondary"
+        color: "#EEDC82"
+        valign: "top"
+        
+    CustomTextLabel:
+        text: f"[color=FFA500]{root.source_name}[/color] | [color=CC7722]{root.author_name}[/color]"
+        theme_text_color: "Hint"
+        valign: "center"
+        markup: True
+        
+    CustomTextLabel:
+        text: root.get_human_published_time(root.published_at)
+        theme_text_color: "Hint"
+        color: "#DFFF00"
+        valign: "bottom"
+        
+             
+<CustomTextLabel@MDLabel>:
+    size_hint_y: None
+    height: self.texture_size[1]
+    text_size: self.width, None
+    
+    
+<WaitingSpinnerDialog>:
+    md_bg_color: 0, 0, 0, 0
+    background_color: 0, 0, 0, 0  # Fully transparent background
+    elevation: 0  # Remove shadow effect
+    
+    
+<DropdownTimeButton@MDRectangleFlatIconButton>:
+    theme_text_color: "Custom"
+	text_color: "#FFA500"
+    line_color: "#FFEB3B"
+    line_width: 1.2
+    font_size: "18sp"
+	halign: "left"
+
+	
+<ErrorDialog>:
+    canvas.before:
+        Color:
+            rgba: 252/255, 226/255, 5/255, 1
+            
+        Line:
+            width: 3
+            rectangle: (self.x, self.y, self.width, self.height)
